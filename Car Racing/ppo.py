@@ -144,7 +144,7 @@ class PPO:
             action = policy.sample()
             log_prob = policy.log_prob(action).sum()
 
-            next_state, reward, done, _, _ = self.env.step(action.numpy())
+            next_state, reward, done, _, _ = self.env.step(action.cpu().numpy())
 
             if done:
                 next_state = self.env.reset()

@@ -105,7 +105,7 @@ class LearnedPWNet(nn.Module):
             trans_img = list()
             for j, t in enumerate(self.ts):
                 with torch.no_grad():
-                    x = self.transform(torch.tensor(img, dtype=torch.float32).view(1, -1), j)
+                    x = self.transform(torch.tensor(img, dtype=torch.float32).view(1, -1).to(self.device), j)
                 trans_img.append(x[0].tolist())
             trans_x.append(trans_img)
         trans_x = np.array(trans_x)
@@ -113,7 +113,7 @@ class LearnedPWNet(nn.Module):
         nn_xs = []
         dists = []
         for i in range(self.num_prototypes):
-            trained_prototype = self.latent_protos.clone().detach()[i].view(1,-1)
+            trained_prototype = self.latent_protos.clone().detach()[i].view(1,-1).cpu().numpy()
             knn = KNeighborsRegressor(algorithm='brute')
             knn.fit(trans_x[:, i, :], list(range(len(trans_x))))
             dist, nn_idx = knn.kneighbors(X=trained_prototype, n_neighbors=1, return_distance=True)
@@ -135,7 +135,8 @@ class LearnedPWNet(nn.Module):
         for i, idx in enumerate(prototype_idxs):
             ax = fig.add_subplot(nrows, ncols, i+1)
             ax.imshow(states[idx])
-            ax.set_title(f"Prototype {i+1} (D: {self.prototype_dists[i]:.2f})")
+            ax.set_title(f"Prototype {i+1} (D: {self.prototype_dists[i]:.2f})",
+                    fontdict={'fontsize': 8})
         return fig
 
     def plot_weights(self):
@@ -145,7 +146,7 @@ class LearnedPWNet(nn.Module):
 
         fig = plt.figure(figsize=(6, 6))
         ax = fig.add_subplot(1, 1, 1)
-        ax.matshow(t, cmap='PiYG', vmin=-t.abs().max(), vmax=t.abs().max())
+        ax.matshow(t.cpu().numpy(), cmap='PiYG', vmin=-t.abs().max(), vmax=t.abs().max())
         for i in range(t.shape[0]):
             for j in range(t.shape[1]):
                 ax.annotate(f'{t[i, j].item():.4f}', (j, i), ha="center", va="center")

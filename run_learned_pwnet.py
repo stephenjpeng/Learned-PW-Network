@@ -130,6 +130,7 @@ def train(args):
 
         #### Training
         model = LearnedPWNet(args).eval()
+        model.to(args['device'])
         # model.nn_human_x.data.copy_( torch.tensor(nn_human_x) )
 
         mse_loss = nn.MSELoss()
