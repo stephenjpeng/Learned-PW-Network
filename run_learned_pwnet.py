@@ -205,6 +205,20 @@ def train(args):
 def evaluate(args):
     data_rewards = list()
     data_errors = list()
+    with open('Car Racing/data/X_train.pkl', 'rb') as f:
+        X_train = pickle.load(f)
+    with open('Car Racing/data/real_actions.pkl', 'rb') as f:
+        real_actions = pickle.load(f)
+    with open('Car Racing/data/obs_train.pkl', 'rb') as f:
+        states = pickle.load(f)
+
+    X_train = np.array([item for sublist in X_train for item in sublist])
+    real_actions = np.array([item for sublist in real_actions for item in sublist])
+    states = np.array([item for sublist in states for item in sublist])
+    tensor_x = torch.Tensor(X_train)
+    tensor_y = torch.tensor(real_actions, dtype=torch.float32)
+    train_dataset = TensorDataset(tensor_x, tensor_y)
+    train_loader = DataLoader(train_dataset, shuffle=True, batch_size=args['batch_size'])
 
     mse_loss = nn.MSELoss()
     for _ in range(args['num_iterations']):
@@ -230,9 +244,10 @@ def evaluate(args):
         ppo.load("Car Racing/weights/agent_weights.pt")
 
         # Wrapper model with learned weights
-        model = LearnedPWNet().eval()
+        model = LearnedPWNet(args).eval()
         model.load_state_dict(torch.load(args['model_dir']))
-        # print("Sanity Check: MSE Eval:", evaluate_loader(model, train_loader, mse_loss, args))
+        model.to(args['device'])
+        print("Sanity Check: MSE Eval:", evaluate_loader(model, train_loader, mse_loss, args))
 
         reward_arr = []
         all_errors = list()
@@ -253,9 +268,9 @@ def evaluate(args):
 
                 action = model(latent_x)
 
-                all_errors.append(mse_loss( torch.tensor(bb_action), action[0]).detach().item())
+                all_errors.append(mse_loss( torch.tensor(bb_action).to(args['device']), action[0]).detach().item())
 
-                state, reward, done, _, _ = ppo.env.step(action[0].detach().numpy(), real_action=True)
+                state, reward, done, _, _ = ppo.env.step(action[0].detach().cpu().numpy(), real_action=True)
                 state = ppo._to_tensor(state)
                 rew += reward
                 count += 1
