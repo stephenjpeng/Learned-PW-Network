@@ -1,4 +1,3 @@
-ale-py==0.7.5
 appnope==0.1.3
 argon2-cffi==21.3.0
 argon2-cffi-bindings==21.2.0
@@ -25,7 +24,7 @@ entrypoints==0.4
 executing==1.0.0
 fastjsonschema==2.16.1
 fonttools==4.37.2
-gym==0.21.0
+gym[atari]==0.21.0
 gym-notices==0.0.8
 idna==3.3
 importlib-metadata==4.12.0
@@ -100,31 +99,3 @@ wcwidth==0.2.5
 webencodings==0.5.1
 widgetsnbextension==4.0.3
 zipp==3.8.1
-
-
-
-
-
-
-
-
-
-
-
-python3 -m venv pwnet
-source pwnet/bin/activate
-pip3 install --upgrade pip
-pip install gym==0.21.0  
-pip install opencv-python
-pip3 install torch torchvision torchaudio
-pip install atari-py==0.2.9
-pip install gym'[atari]'
-pip install gym'[accept-rom-license]'
-pip install scikit-learn
-pip install toml
-
-
-
-
-
-

@@ -56,12 +56,13 @@ reward_arr = list()
 
 for ep in tqdm(range(NUM_EPISODES)):
 
-	next_state = ppo.env.reset()
+	next_state, self_frame = ppo.env.reset(return_real_frame=True)
 	rew = 0
 	done = False
 	count = 0
 
 	ep_actions = list()
+	ep_states = list()
 	ep_x = list()
 
 	while not done:
@@ -77,15 +78,16 @@ for ep in tqdm(range(NUM_EPISODES)):
 		input_action = policy.mean.detach()
 		# input_action = policy.sample()
 
-		next_state, reward, done, info, real_action = ppo.env.step(input_action.cpu().numpy())
+		next_state, reward, done, info, real_action, next_frame = ppo.env.step(input_action.cpu().numpy(), return_real_frame=True)
 		next_state = ppo._to_tensor(next_state)
 
 		# # Store the transition
 		ep_actions.append(real_action.tolist())
 		ep_x.append(x.tolist()[0])
-		# ep_states.append(self_state)
+		ep_states.append(self_frame)
 
 		self_state = next_state
+		self_frame = next_frame
 		rew += reward
 
 		# ppo.env.render()
@@ -94,7 +96,7 @@ for ep in tqdm(range(NUM_EPISODES)):
 	print(count)
 
 	# Store the transition
-	# states.append(ep_states)
+	states.append(ep_states)
 	real_actions.append(ep_actions)
 	X_train.append(ep_x)
 	rew += reward
@@ -106,8 +108,8 @@ with open('data/X_train.pkl', 'wb') as f:
 	pickle.dump(X_train, f)
 with open('data/real_actions.pkl', 'wb') as f:
 	pickle.dump(real_actions, f)
-# with open('data/obs_train.pkl', 'wb') as f:
-# 	pickle.dump(states, f)
+with open('data/obs_train.pkl', 'wb') as f:
+	pickle.dump(states, f)
 # with open('data/saved_materials.pkl', 'wb') as f:
 # 	pickle.dump(saved_materials, f)
 

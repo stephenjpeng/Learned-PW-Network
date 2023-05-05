@@ -111,21 +111,25 @@ class CarRacing(gym.Wrapper):
     def get_observation(self):
         return np.array(self.frame_buf)
 
-    def reset(self):
+    def reset(self, return_real_frame=False):
 
         self.t = 0
         self.last_reward_step = 0
         self.n_episodes += 1
         self.total_reward = 0
 
-        first_frame = self.postprocess(self.env.reset())
+        real_frame = self.env.reset()
+        first_frame = self.postprocess(real_frame)
 
         for _ in range(self.frame_stack):
             self.frame_buf.append(first_frame)
 
-        return self.get_observation()
+        if return_real_frame:
+            return self.get_observation(), real_frame
+        else:
+            return self.get_observation()
 
-    def step(self, action, real_action=False):
+    def step(self, action, real_action=False, return_real_frame=False):
         self.t += 1
 
         if not real_action:
@@ -146,10 +150,15 @@ class CarRacing(gym.Wrapper):
 
         reward = total_reward / (self.frame_skip + 1)
 
-        real_frame = deepcopy(new_frame)
 
+        if return_real_frame:
+            real_frame = deepcopy(new_frame)
         new_frame = self.postprocess(new_frame)
         self.frame_buf.append(new_frame)
 
-        return self.get_observation(), reward, done, info, torch.tensor(action)  #, real_frame
+        if return_real_frame:
+            return self.get_observation(), reward, done, info, torch.tensor(action), real_frame
+
+        else:
+            return self.get_observation(), reward, done, info, torch.tensor(action)
 
